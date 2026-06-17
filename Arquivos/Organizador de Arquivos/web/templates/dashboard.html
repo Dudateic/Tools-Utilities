@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IA Organizadora de Arquivos</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="container">
+        <h1>IA Organizadora</h1>
+        <p>Organize seus arquivos automaticamente com inteligência artificial</p>
+    </div>
+</nav>
+
+<div class="container">
+    
+    <section class="box">
+        <h2>Controles</h2>
+        <div class="controles">
+            <button class="btn btn-success" onclick="organizar()">
+                Organizar Downloads
+            </button>
+            <button class="btn btn-info" onclick="carregarStats()">
+                Atualizar Estatísticas
+            </button>
+        </div>
+    </section>
+
+    <section class="box">
+        <h2>Estatísticas</h2>
+        <div id="stats" class="stats-grid">
+            <p class="loading">Carregando...</p>
+        </div>
+    </section>
+
+    <section class="box">
+        <h2>Regras de Classificação</h2>
+        
+        <div class="add-rule">
+            <h3>Adicionar Nova Regra</h3>
+            <div class="form-group">
+                <input type="text" id="novaCategoria" placeholder="Categoria (ex: financeiro)" class="input">
+                <input type="text" id="novaPalavra" placeholder="Palavra-chave (ex: boleto)" class="input">
+                <button class="btn btn-primary" onclick="adicionarRegra()">Adicionar</button>
+            </div>
+        </div>
+
+        <div id="regras" class="regras-container">
+            <p class="loading">Carregando regras...</p>
+        </div>
+    </section>
+
+    <section class="box">
+        <h2>Últimos Logs</h2>
+        <button class="btn btn-small" onclick="carregarLogs()">Atualizar</button>
+        <div id="logs" class="logs-container">
+            <p class="loading">Carregando logs...</p>
+        </div>
+    </section>
+
+    <section class="box">
+        <h2>Teste de Classificação</h2>
+        <div class="form-group">
+            <input type="text" id="nomeArquivoTeste" placeholder="Nome do arquivo (ex: boleto_dezembro.pdf)" class="input">
+            <button class="btn btn-primary" onclick="testarClassificacao()">Classificar</button>
+        </div>
+        <div id="resultadoClassificacao" class="resultado"></div>
+    </section>
+
+</div>
+
+<script>
+const API_BASE = '/api';
+
+function mostrarMensagem(mensagem, tipo = 'info') {
+    alert(`[${tipo.toUpperCase()}] ${mensagem}`);
+}
+
+function carregarRegras() {
+    fetch(`${API_BASE}/regras`)
+        .then(r => r.json())
+        .then(regras => {
+            let html = '<div class="regras-list">';
+            
+            for (const [categoria, palavras] of Object.entries(regras)) {
+                html += `
+                    <div class="categoria-box">
+                        <h4>${categoria}</h4>
+                        <div class="palavras-chave">
+                            ${palavras.map(p => `
+                                <span class="palavra">
+                                    ${p}
+                                    <button class="btn-remove" onclick="removerRegra('${categoria}', '${p}')">✕</button>
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            document.getElementById('regras').innerHTML = html;
+        })
+        .catch(e => console.error('Erro ao carregar regras:', e));
+}
+
+function adicionarRegra() {
+    const categoria = document.getElementById('novaCategoria').value.trim();
+    const palavra = document.getElementById('novaPalavra').value.trim();
+    
+    if (!categoria || !palavra) {
+        mostrarMensagem('Categoria e palavra são obrigatórias', 'erro');
+        return;
+    }
+    
+    fetch(`${API_BASE}/regras`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({categoria, palavra})
+    })
+    .then(r => r.json())
+    .then(data => {
+        mostrarMensagem(data.mensagem || data.aviso, 'sucesso');
+        document.getElementById('novaCategoria').value = '';
+        document.getElementById('novaPalavra').value = '';
+        carregarRegras();
+    })
+    .catch(e => mostrarMensagem('Erro ao adicionar regra: ' + e, 'erro'));
+}
+
+function removerRegra(categoria, palavra) {
+    if (!confirm(`Remover "${palavra}" de "${categoria}"?`)) return;
+    
+    fetch(`${API_BASE}/regras/${categoria}/${palavra}`, {method: 'DELETE'})
+        .then(r => r.json())
+        .then(data => {
+            mostrarMensagem(data.mensagem, 'sucesso');
+            carregarRegras();
+        })
+        .catch(e => mostrarMensagem('Erro ao remover regra: ' + e, 'erro'));
+}
+
+function carregarLogs() {
+    fetch(`${API_BASE}/logs`)
+        .then(r => r.json())
+        .then(logs => {
+            const ultimosLogs = logs.slice(-10).reverse();
+            
+            let html = '<table class="logs-table"><tr><th>Arquivo</th><th>Categoria</th><th>Data</th></tr>';
+            
+            ultimosLogs.forEach(log => {
+                const data = new Date(log.timestamp).toLocaleString('pt-BR');
+                html += `<tr><td>${log.arquivo}</td><td>${log.categoria}</td><td>${data}</td></tr>`;
+            });
+            
+            html += '</table>';
+            document.getElementById('logs').innerHTML = html;
+        })
+        .catch(e => console.error('Erro ao carregar logs:', e));
+}
+
+function carregarStats() {
+    fetch(`${API_BASE}/stats`)
+        .then(r => r.json())
+        .then(stats => {
+            let html = '<div class="stats-cards">';
+            
+            for (const [categoria, count] of Object.entries(stats)) {
+                html += `
+                    <div class="stat-card">
+                        <div class="stat-label">${categoria}</div>
+                        <div class="stat-value">${count}</div>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            document.getElementById('stats').innerHTML = html;
+        })
+        .catch(e => console.error('Erro ao carregar stats:', e));
+}
+
+function organizar() {
+    if (!confirm('Iniciar organização de arquivos?')) return;
+    
+    fetch(`${API_BASE}/organizar`, {method: 'POST'})
+        .then(r => r.json())
+        .then(data => {
+            mostrarMensagem(data.mensagem, 'sucesso');
+            setTimeout(() => {
+                carregarLogs();
+                carregarStats();
+            }, 2000);
+        })
+        .catch(e => mostrarMensagem('Erro ao organizar: ' + e, 'erro'));
+}
+
+function testarClassificacao() {
+    const nome = document.getElementById('nomeArquivoTeste').value.trim();
+    
+    if (!nome) {
+        mostrarMensagem('Digite um nome de arquivo', 'erro');
+        return;
+    }
+    
+    fetch(`${API_BASE}/classificar`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({nome_arquivo: nome})
+    })
+    .then(r => r.json())
+    .then(data => {
+        let html = `
+            <div class="resultado-sucesso">
+                <p><strong>Arquivo:</strong> ${data.nome_arquivo}</p>
+                <p><strong>Categoria:</strong> <span class="categoria-badge">${data.categoria}</span></p>
+                <p><strong>Sugestões:</strong></p>
+                <ul>
+                    ${Object.entries(data.sugestoes).map(([cat, score]) => 
+                        `<li>${cat} (relevância: ${score})</li>`
+                    ).join('') || '<li>Nenhuma sugestão</li>'}
+                </ul>
+            </div>
+        `;
+        document.getElementById('resultadoClassificacao').innerHTML = html;
+    })
+    .catch(e => {
+        document.getElementById('resultadoClassificacao').innerHTML = 
+            `<div class="resultado-erro">Erro: ${e}</div>`;
+    });
+}
+
+window.addEventListener('load', () => {
+    carregarRegras();
+    carregarLogs();
+    carregarStats();
+});
+</script>
+
+</body>
+</html>
