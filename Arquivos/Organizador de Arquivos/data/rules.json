@@ -1,0 +1,40 @@
+{
+    "financeiro": [
+        "boleto",
+        "fatura",
+        "nubank",
+        "cartao",
+        "pix",
+        "pagamento",
+        "nfe",
+        "recibo",
+        "nota"
+    ],
+    "trabalho": [
+        "curriculo",
+        "cv",
+        "vaga",
+        "portifolio",
+        "empresa",
+        "proposta",
+        "contrato"
+    ],
+    "estudos": [
+        "prova",
+        "aula",
+        "curso",
+        "exercicio",
+        "faculdade",
+        "apostila",
+        "resumo"
+    ],
+    "mensagens": [
+        "whatsapp",
+        "telegram",
+        "img",
+        "screenshot",
+        "print",
+        "mensagem"
+    ],
+    "outros": []
+}
