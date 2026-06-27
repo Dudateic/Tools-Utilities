@@ -7,7 +7,7 @@ BIN_DIR = $(BUILD_DIR)/bin
 CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -Iinclude `pkg-config --cflags gtkmm-3.0`
 LDFLAGS = `pkg-config --libs gtkmm-3.0`
 
-SOURCES = src/main.cpp src/config.cpp src/cpu_monitor.cpp src/ram_monitor.cpp src/network_monitor.cpp src/logger.cpp
+SOURCES = src/main.cpp src/config.cpp src/cpu_monitor.cpp src/ram_monitor.cpp src/network_monitor.cpp src/logger.cpp src/notification.cpp
 OBJECTS = $(patsubst src/%.cpp,$(OBJ_DIR)/%.o,$(SOURCES))
 
 all: prepare $(TARGET)
