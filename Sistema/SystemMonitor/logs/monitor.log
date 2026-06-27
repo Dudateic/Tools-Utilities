@@ -1,24 +1,26 @@
-Wed Jun 17 20:30:28 2026
- -> System Monitor iniciado
-Wed Jun 17 20:30:28 2026
- -> CPU: 0.00% | RAM: 67.73% | Network: OK
-Wed Jun 17 20:30:33 2026
- -> CPU: 12.09% | RAM: 66.00% | Network: OK
-Wed Jun 17 20:30:38 2026
- -> CPU: 11.10% | RAM: 66.05% | Network: OK
-Wed Jun 17 20:30:43 2026
- -> CPU: 10.13% | RAM: 65.87% | Network: OK
-Wed Jun 17 20:30:48 2026
- -> CPU: 11.22% | RAM: 65.85% | Network: OK
-Wed Jun 17 20:30:53 2026
- -> CPU: 8.88% | RAM: 65.86% | Network: OK
-Wed Jun 17 20:30:58 2026
- -> CPU: 9.53% | RAM: 66.09% | Network: OK
-Wed Jun 17 20:31:03 2026
- -> CPU: 10.16% | RAM: 65.92% | Network: OK
-Wed Jun 17 20:31:12 2026
- -> System Monitor iniciado
-Wed Jun 17 20:31:12 2026
- -> CPU: 0.00% | RAM: 66.59% | Network: OK
-Wed Jun 17 20:31:17 2026
- -> CPU: 11.40% | RAM: 66.28% | Network: OK
+Fri Jun 26 23:52:17 2026
+ -> System Monitor GUI iniciado
+Fri Jun 26 23:52:17 2026
+ -> CPU: 0.00% | RAM: 59.19% | Rede: OK | Latencia: 29.50 ms
+Fri Jun 26 23:52:19 2026
+ -> CPU: 11.89% | RAM: 58.41% | Rede: OK | Latencia: 27.00 ms
+Fri Jun 26 23:52:21 2026
+ -> CPU: 9.24% | RAM: 58.41% | Rede: OK | Latencia: 29.70 ms
+Fri Jun 26 23:52:23 2026
+ -> CPU: 7.85% | RAM: 58.42% | Rede: OK | Latencia: 31.00 ms
+Fri Jun 26 23:52:25 2026
+ -> CPU: 10.15% | RAM: 57.99% | Rede: OK | Latencia: 29.70 ms
+Fri Jun 26 23:52:27 2026
+ -> CPU: 12.80% | RAM: 57.47% | Rede: OK | Latencia: 30.40 ms
+Fri Jun 26 23:52:29 2026
+ -> CPU: 11.98% | RAM: 57.39% | Rede: OK | Latencia: 29.30 ms
+Fri Jun 26 23:52:31 2026
+ -> CPU: 9.61% | RAM: 57.06% | Rede: OK | Latencia: 27.90 ms
+Fri Jun 26 23:52:33 2026
+ -> CPU: 10.52% | RAM: 57.10% | Rede: OK | Latencia: 29.20 ms
+Fri Jun 26 23:52:35 2026
+ -> CPU: 11.39% | RAM: 57.06% | Rede: OK | Latencia: 27.00 ms
+Fri Jun 26 23:52:37 2026
+ -> CPU: 13.31% | RAM: 56.92% | Rede: OK | Latencia: 29.30 ms
+Fri Jun 26 23:52:39 2026
+ -> CPU: 10.93% | RAM: 56.98% | Rede: OK | Latencia: 27.40 ms
