@@ -3,6 +3,7 @@
 #include "../include/ram_monitor.hpp"
 #include "../include/network_monitor.hpp"
 #include "../include/logger.hpp"
+#include "../include/notification.hpp"
 
 #include <gtkmm.h>
 #include <iomanip>
@@ -40,6 +41,10 @@ private:
     Gtk::Label alertLabel;
 
     sigc::connection timerConnection;
+
+    bool cpuAlertActive = false;
+    bool ramAlertActive = false;
+    bool networkAlertActive = false;
 
 public:
     MonitorWindow()
@@ -81,6 +86,7 @@ public:
         show_all_children();
 
         updateStatus();
+
         timerConnection = Glib::signal_timeout().connect(
             sigc::mem_fun(*this, &MonitorWindow::updateStatus),
             config.getInterval() * 1000
@@ -91,6 +97,7 @@ public:
         if (timerConnection.connected()) {
             timerConnection.disconnect();
         }
+
         Logger::log("System Monitor GUI finalizado");
     }
 
@@ -98,37 +105,47 @@ private:
     void setupCpuArea() {
         cpuFrame.set_label("CPU");
         cpuFrame.set_shadow_type(Gtk::SHADOW_ETCHED_IN);
+
         cpuBar.set_show_text(true);
+
         cpuBox.set_border_width(10);
         cpuBox.pack_start(cpuLabel, Gtk::PACK_SHRINK);
         cpuBox.pack_start(cpuBar, Gtk::PACK_SHRINK);
+
         cpuFrame.add(cpuBox);
     }
 
     void setupRamArea() {
         ramFrame.set_label("Memoria RAM");
         ramFrame.set_shadow_type(Gtk::SHADOW_ETCHED_IN);
+
         ramBar.set_show_text(true);
+
         ramBox.set_border_width(10);
         ramBox.pack_start(ramLabel, Gtk::PACK_SHRINK);
         ramBox.pack_start(ramBar, Gtk::PACK_SHRINK);
+
         ramFrame.add(ramBox);
     }
 
     void setupNetworkArea() {
         networkFrame.set_label("Rede");
         networkFrame.set_shadow_type(Gtk::SHADOW_ETCHED_IN);
+
         networkBox.set_border_width(10);
         networkBox.pack_start(networkLabel, Gtk::PACK_SHRINK);
         networkBox.pack_start(latencyLabel, Gtk::PACK_SHRINK);
+
         networkFrame.add(networkBox);
     }
 
     void setupConfigArea() {
         configFrame.set_label("Configuracao");
         configFrame.set_shadow_type(Gtk::SHADOW_ETCHED_IN);
+
         configBox.set_border_width(10);
         configBox.pack_start(configLabel, Gtk::PACK_SHRINK);
+
         configFrame.add(configBox);
 
         std::stringstream ss;
@@ -136,16 +153,21 @@ private:
            << "Limite RAM: " << config.getRamLimit() << "% | "
            << "Host: " << config.getPingHost() << " | "
            << "Intervalo: " << config.getInterval() << "s";
+
         configLabel.set_text(ss.str());
     }
 
     void setupAlertArea() {
         alertFrame.set_label("Alertas");
         alertFrame.set_shadow_type(Gtk::SHADOW_ETCHED_IN);
+
         alertBox.set_border_width(10);
+
         alertLabel.set_line_wrap(true);
         alertLabel.set_text("Nenhum alerta no momento.");
+
         alertBox.pack_start(alertLabel, Gtk::PACK_SHRINK);
+
         alertFrame.add(alertBox);
     }
 
@@ -153,6 +175,54 @@ private:
         std::stringstream ss;
         ss << std::fixed << std::setprecision(2) << value << "%";
         return ss.str();
+    }
+
+    void notifyCpuAlert(float cpuUsage) {
+        if (!cpuAlertActive) {
+            Notification::send(
+                "Alerta de CPU",
+                "Uso da CPU acima do limite configurado: " + formatPercent(cpuUsage)
+            );
+
+            Logger::log("NOTIFICATION: CPU alert sent");
+            cpuAlertActive = true;
+        }
+    }
+
+    void notifyRamAlert(float ramUsage) {
+        if (!ramAlertActive) {
+            Notification::send(
+                "Alerta de RAM",
+                "Uso da RAM acima do limite configurado: " + formatPercent(ramUsage)
+            );
+
+            Logger::log("NOTIFICATION: RAM alert sent");
+            ramAlertActive = true;
+        }
+    }
+
+    void notifyNetworkDown() {
+        if (!networkAlertActive) {
+            Notification::send(
+                "Alerta de Rede",
+                "A conexao de rede esta indisponivel."
+            );
+
+            Logger::log("NOTIFICATION: Network down alert sent");
+            networkAlertActive = true;
+        }
+    }
+
+    void notifyNetworkRestored() {
+        if (networkAlertActive) {
+            Notification::send(
+                "Rede Restabelecida",
+                "A conexao de rede voltou ao normal."
+            );
+
+            Logger::log("NOTIFICATION: Network restored alert sent");
+            networkAlertActive = false;
+        }
     }
 
     bool updateStatus() {
@@ -176,8 +246,14 @@ private:
         }
 
         std::stringstream latencyStream;
-        latencyStream << std::fixed << std::setprecision(2)
-                      << "Latencia: " << latency << " ms";
+
+        if (networkOk) {
+            latencyStream << std::fixed << std::setprecision(2)
+                          << "Latencia: " << latency << " ms";
+        } else {
+            latencyStream << "Latencia: indisponivel";
+        }
+
         latencyLabel.set_text(latencyStream.str());
 
         std::stringstream logStream;
@@ -185,6 +261,7 @@ private:
                   << "CPU: " << cpuUsage << "% | RAM: " << ramUsage
                   << "% | Rede: " << (networkOk ? "OK" : "FAIL")
                   << " | Latencia: " << latency << " ms";
+
         Logger::log(logStream.str());
 
         std::stringstream alerts;
@@ -193,25 +270,43 @@ private:
         if (cpuUsage > config.getCpuLimit()) {
             alerts << "CPU acima do limite: " << formatPercent(cpuUsage)
                    << " / limite " << formatPercent(config.getCpuLimit()) << "\n";
+
             hasAlert = true;
+            notifyCpuAlert(cpuUsage);
+        } else {
+            cpuAlertActive = false;
         }
 
         if (ramUsage > config.getRamLimit()) {
             alerts << "RAM acima do limite: " << formatPercent(ramUsage)
                    << " / limite " << formatPercent(config.getRamLimit()) << "\n";
+
             hasAlert = true;
+            notifyRamAlert(ramUsage);
+        } else {
+            ramAlertActive = false;
         }
 
         if (!networkOk) {
-            alerts << "Rede indisponivel. Falha ao pingar " << config.getPingHost() << "\n";
+            alerts << "Rede indisponivel. Falha ao pingar "
+                   << config.getPingHost() << "\n";
+
             hasAlert = true;
+            notifyNetworkDown();
+        } else {
+            notifyNetworkRestored();
         }
 
         if (hasAlert) {
-            alertLabel.set_markup("<span foreground='red' weight='bold'>" + alerts.str() + "</span>");
+            alertLabel.set_markup(
+                "<span foreground='red' weight='bold'>" + alerts.str() + "</span>"
+            );
+
             Logger::log("ALERTA: " + alerts.str());
         } else {
-            alertLabel.set_markup("<span foreground='green'>Nenhum alerta no momento.</span>");
+            alertLabel.set_markup(
+                "<span foreground='green'>Nenhum alerta no momento.</span>"
+            );
         }
 
         return true;
@@ -220,6 +315,8 @@ private:
 
 int main(int argc, char* argv[]) {
     auto app = Gtk::Application::create(argc, argv, "com.axio.systemmonitor");
+
     MonitorWindow window;
+
     return app->run(window);
 }
